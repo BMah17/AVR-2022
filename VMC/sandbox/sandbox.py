@@ -1,6 +1,6 @@
 from bell.avr.mqtt.client import MQTTModule
-from bell.avr.mqtt.payloads import AvrFcmVelocityPayload
-from bell.avr.mqtt.payloads import AvrApriltagsVisiblePayload
+from bell.avr.mqtt.payloads import *
+
 
 # This imports the third-party Loguru library which helps make logging way easier
 # and more useful.
@@ -12,7 +12,15 @@ class Sandbox(MQTTModule):
     def __init__(self) -> None:
         super().__init__()
         # Here, we're creating a dictionary of MQTT topic names to method handles.
-        self.topic_map = {"avr/fcm/velocity": self.show_velocity, "avr/apriltags/visible": self.april_tag}
+        self.topic_map = {"avr/fcm/velocity": self.show_velocity,
+                          "avr/apriltags/visible": self.april_tag,
+                          "avr/autonomous/enable": self.auton}
+        self.home_val = None
+
+    def auton(self, payload):
+        logger.debug(payload)
+        if payload["enabled"]:
+            logger.debug("auton is enabled")
 
     # This is what executes whenever a message is received on the "avr/fcm/velocity"
     # topic. The content of the message is passed to the `payload` argument.
@@ -39,6 +47,48 @@ class Sandbox(MQTTModule):
     def april_tag(self, payload: AvrApriltagsVisiblePayload) -> None:
         logger.debug(f'april_tag is running\npayload: {payload}')
 
+    def captureHome(self) -> None:
+        self.home_val = self.send_message(
+            "avr/fcm/capture_home"
+        )
+
+    def takeoff(self) -> None:
+        self.send_message(
+            "/avr/fcm/actions",
+            {
+                "action": "takeoff",
+                "payload": {
+                "alt": 1
+                }
+            }
+        )
+
+    def land(self) -> None:
+        self.send_message(
+            "/avr/fcm/actions",
+            {
+                "action": "land",
+                "payload": {}
+            }
+        )
+
+    def move(self, payload, pos: str) -> None:
+        if self.home_val is None:
+            self.captureHome()
+        north, east, down = pos
+        self.send_message(
+            "/avr/fcm/actions",
+            {
+                "action": "goto_location_ned",
+                "payload": {
+                "n": north,
+                "e": east,
+                "d": down,
+                "heading": 0
+                }
+            }
+        )
+
 
 if __name__ == "__main__":
     # This is what actually initializes the Sandbox class, and executes it.
@@ -46,3 +96,5 @@ if __name__ == "__main__":
     # The `run` method is defined by the inherited `MQTTModule` class and is a
     # convience function to start processing incoming MQTT messages infinitely.
     box.run()
+    #box.takeoff()
+    #time.sleep(6)
