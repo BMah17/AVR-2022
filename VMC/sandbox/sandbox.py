@@ -1,5 +1,6 @@
 from bell.avr.mqtt.client import MQTTModule
 from bell.avr.mqtt.payloads import *
+import time
 
 
 # This imports the third-party Loguru library which helps make logging way easier
@@ -21,6 +22,16 @@ class Sandbox(MQTTModule):
         logger.debug(payload)
         if payload["enabled"]:
             logger.debug("auton is enabled")
+            self.send_message(
+                "/avr/fcm/actions",
+                {
+                    "action": "arm",
+                    "payload": {}
+                }
+            )
+            self.takeoff()
+            time.sleep(5)
+            self.land()
 
     # This is what executes whenever a message is received on the "avr/fcm/velocity"
     # topic. The content of the message is passed to the `payload` argument.
