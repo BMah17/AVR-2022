@@ -13,46 +13,45 @@ class Sandbox(MQTTModule):
     def __init__(self) -> None:
         super().__init__()
         # Here, we're creating a dictionary of MQTT topic names to method handles.
-        self.topic_map = {"avr/fcm/velocity": self.show_velocity,
-                          "avr/apriltags/visible": self.april_tag,
-                          "avr/autonomous/enable": self.auton}
+        self.topic_map = {
+                            "avr/apriltags/visible": self.april_tag,
+                            "avr/autonomous/enable": self.auton,
+                            "avr/autonomous/building/drop": self.buildingListener
+                         }
         self.home_val = None
+        self.building_drop = False
 
     def auton(self, payload):
         logger.debug(payload)
         if payload["enabled"]:
             logger.debug("auton is enabled")
-            self.send_message(
-                "/avr/fcm/actions",
-                {
-                    "action": "arm",
-                    "payload": {}
-                }
-            )
+            self.arm()
+            logger.debug("worked horray :)")
             self.takeoff()
             time.sleep(5)
             self.land()
 
-    # This is what executes whenever a message is received on the "avr/fcm/velocity"
-    # topic. The content of the message is passed to the `payload` argument.
-    # The `AvrFcmVelocityMessage` class here is beyond the scope of AVR.
-    def show_velocity(self, payload: AvrFcmVelocityPayload) -> None:
-        vx = payload["vX"]
-        vy = payload["vY"]
-        vz = payload["vZ"]
-        v_ms = (vx, vy, vz)
+    def buildingListener(self, payload):
+        #self.building_drop = payload["enabled"]
+        if payload["enabled"]:
+            logger.debug(payload)
+            self.open_servo()
 
-        # Use methods like `debug`, `info`, `success`, `warning`, `error`, and
-        # `critical` to log data that you can see while your code runs.
-
-        logger.debug(f"Velocity information: {v_ms} m/s")
+    def arm(self) -> None:
+        self.send_message(
+            "/avr/fcm/actions",
+            {
+                "action": "arm",
+                "payload": {}
+            }
+        )
 
     def open_servo(self) -> None:
         # It's super easy, use the `self.send_message` method with the first argument
         # as the topic, and the second argument as the payload.
         self.send_message(  # type: ignore (to appease type checker)
-            "avr/pcm/set_servo_open_close",
-            {"servo": 0, "action": "open"},
+            "avr/pcm/set_servo_pct",
+            {"servo": 0, "percent": 50},
         )
 
     def april_tag(self, payload: AvrApriltagsVisiblePayload) -> None:

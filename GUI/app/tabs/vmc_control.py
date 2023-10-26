@@ -5,7 +5,7 @@ from typing import List, Literal, Tuple
 
 from bell.avr.mqtt.payloads import (
     AvrPcmSetBaseColorPayload,
-    AvrPcmSetServoOpenClosePayload,
+    AvrPcmSetServoPctPayload,
 )
 from PySide6 import QtCore, QtWidgets
 
@@ -121,8 +121,8 @@ class VMCControlWidget(BaseTabWidget):
         Set a servo state
         """
         self.send_message(
-            "avr/pcm/set_servo_open_close",
-            AvrPcmSetServoOpenClosePayload(servo=number, action=action),
+            "avr/pcm/set_servo_pct",
+            AvrPcmSetServoPctPayload(servo=number, percent=50),
         )
 
         if action == "open":
