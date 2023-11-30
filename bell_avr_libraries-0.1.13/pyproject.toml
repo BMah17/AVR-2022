@@ -1,0 +1,63 @@
+[tool.poetry]
+    name = "bell-avr-libraries"
+    version = "0.1.13"
+    description = "Common Python libraries used by parts of Bell AVR"
+    license = "MIT"
+    readme = "README.md"
+    homepage = "https://github.com/bellflight/AVR-Python-Libraries"
+    authors = [
+        "Chris Padilla <cpadilla@bellflight.com>",
+        "Nathan Vaughn <nvaughn51@gmail.com>",
+    ]
+    packages = [{ include = "bell/avr" }]
+    exclude = [
+        "bell/**/*.j2",
+        "bell/**/*.json",
+        "bell/**/*.jsonc",
+        "bell/**/.gitignore",
+    ]
+    include = ["bell/**/*.pyi", "bell/**/*.py"]
+
+[tool.poetry.dependencies]
+    python    = ">=3.8,<3.12"
+    loguru    = "^0.6.0"
+    pyserial  = { version = "^3.5", optional = true }
+    paho-mqtt = { version = "^1.6.1", optional = true }
+
+[tool.poetry.extras]
+    serial = ["pyserial"]
+    mqtt   = ["paho-mqtt"]
+
+[tool.poetry.dev-dependencies]
+    # testing
+    pytest       = "^7.2.0"
+    pytest-xdist = "^3.0.2"
+    # formatting
+    black     = "^22.10.0"
+    isort     = "^5.10.1"
+    autoflake = "^2.0.0"
+    # linting
+    pyleft = "^1.1.0"
+    # building template
+    Jinja2      = "^3.1.2"
+    commentjson = "^0.9.0"
+
+[tool.coverage.run]
+    omit = ["*.venv*"]
+
+[tool.coverage.html]
+    show_contexts = true
+
+[tool.pyright]
+    typeCheckingMode = "basic"
+
+    # [tool.pytest.ini_options]
+    #     addopts = "-n auto"
+
+[tool.isort]
+    profile        = "black"
+    skip_gitignore = true
+
+[build-system]
+    requires      = ["poetry-core>=1.0.0"]
+    build-backend = "poetry.core.masonry.api"
